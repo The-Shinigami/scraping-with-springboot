@@ -1,5 +1,6 @@
 package com.example.datascraping.controller;
 
+import com.example.datascraping.dto.DetailsSD;
 import com.example.datascraping.dto.ResponseSD;
 import com.example.datascraping.service.ScrapeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,4 +20,10 @@ public class ScrapeController {
     public List<ResponseSD> getData(){
         return scrapeService.extreactDataFromSD();
     }
+    
+    @GetMapping("/details")
+    public List<DetailsSD> getDetails(){
+        return scrapeService.extreactDetailsFromSD();
+    }
 }
+
