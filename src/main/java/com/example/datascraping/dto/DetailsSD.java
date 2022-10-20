@@ -11,7 +11,8 @@ public class DetailsSD {
 	List<String> authors;
 	List<String> universeties;
 	String date;
-	
+	String journal;
+
 	public String getTitle() {
 		return title;
 	}
@@ -42,8 +43,15 @@ public class DetailsSD {
 	public void setDate(String date) {
 		this.date = date;
 	}
-	
-	
-	
+	public String getJournal() {
+		return journal;
+	}
+	public void setJournal(String journal) {
+		this.journal = journal;
+	}
+
+
+
+
 
 }
