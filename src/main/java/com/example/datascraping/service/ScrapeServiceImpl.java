@@ -4,6 +4,8 @@ package com.example.datascraping.service;
 
 import com.example.datascraping.dto.DetailsSD;
 import com.example.datascraping.dto.ResponseSD;
+import com.example.datascraping.repository.ScrapeRepository;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -11,11 +13,17 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+//import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ScrapeServiceImpl implements ScrapeService{
@@ -23,6 +31,8 @@ public class ScrapeServiceImpl implements ScrapeService{
     @Autowired
     private Environment env;
 
+    @Autowired
+    private ScrapeRepository repo;
 
     @Override
     public List<ResponseSD> extreactDataFromSD(){
@@ -162,11 +172,12 @@ public class ScrapeServiceImpl implements ScrapeService{
                     dts.setDate(dateTrue);
                     dts.setJournal("SD");
                     dets.add(dts);
-
+                    repo.save(dts);
                 }
         );
 
         driver.close();
+
         return dets;
     }
 
@@ -256,7 +267,7 @@ public class ScrapeServiceImpl implements ScrapeService{
                     dts.setDate(date.getText());
                     dts.setJournal("ACM");
                     dets.add(dts);
-
+                    repo.save(dts);
                 }
         );
 
@@ -278,10 +289,13 @@ public class ScrapeServiceImpl implements ScrapeService{
         List<ResponseSD> links = new ArrayList<ResponseSD>();
         elements.forEach(element -> {
                     ResponseSD res = new ResponseSD();
+                    String cond=element.findElement(By.className("publisher-info-container")).findElements(By.tagName("span")).get(1).findElements(By.tagName("span")).get(1).getText();
 
-                    res.setTitle(element.findElement(By.tagName("a")).getText());
-                    res.setUrl(element.findElement(By.className("result-item-title")).findElement(By.tagName("a")).getAttribute("href"));
-                    links.add(res);
+                    if(cond.equals("Conference Paper")) {
+                        res.setTitle(element.findElement(By.tagName("a")).getText());
+                        res.setUrl(element.findElement(By.className("result-item-title")).findElement(By.tagName("a")).getAttribute("href"));
+                        links.add(res);
+                    }
                 }
         );
 
@@ -302,65 +316,50 @@ public class ScrapeServiceImpl implements ScrapeService{
         links.forEach(link -> {
                     loadPages(driver,link.getUrl(),"IEEE");
                     urls.add(link.getUrl());
-
-                    WebElement elt =driver.findElement(By.className("document-title"));
-                    List<WebElement> authors = driver.findElements(By.className("blue-tooltip"));
-
-                    List<WebElement> buttons=driver.findElements(By.className("document-tab-link"));
-                    try {
-                        buttons.get(5).sendKeys(Keys.ENTER);
-
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    List<WebElement> elms = driver.findElements(By.className("doc-keywords-list-item")).get(0).findElements(By.tagName("a"));
-                    System.out.println(elms.get(0).getText());
-                    try {
-                        buttons.get(1).sendKeys(Keys.ENTER);
-
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    List<WebElement> universeties = driver.findElements(By.className("author-card"));
-                    System.out.println(universeties.get(0).getText());
-
-                    List<WebElement> dates =driver.findElements(By.className("u-pb-1"));
-
                     DetailsSD dts = new DetailsSD();
-                    dts.setTitle(elt.findElement(By.tagName("span")).getText());
+                    List<WebElement> dates =driver.findElements(By.className("u-pb-1"));
+                    dts.setDate(dates.get(3).getText().split(":")[1]);
+                    System.out.println(dates.get(3).getText().split(":")[1]);
+                    WebElement elt =driver.findElement(By.className("document-title"));
 
-                    List<String> keywords=new ArrayList<String>();
+                    dts.setTitle(elt.findElement(By.tagName("span")).getText());
+                    try {
+                        driver.findElement(By.id("authors")).sendKeys(Keys.ENTER);
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    List<WebElement> authors = driver.findElements(By.className("authors-accordion-container"));
                     List<String> auths=new ArrayList<String>();
                     List<String> univs=new ArrayList<String>();
-                    elms.forEach(elm -> {
-                        keywords.add(elm.getText());
-                        System.out.println(elm.getText());
-                    });
-                    dts.setKeywords(keywords);
+                    List<String> keywords=new ArrayList<String>();
 
                     authors.forEach(author -> {
-                        auths.add(author.findElement(By.tagName("span")).getText());
-                        System.out.println(author.findElement(By.tagName("span")).getText());
+
+                        auths.add(author.findElement(By.tagName("a")).getText());
                     });
-                    universeties.forEach(unv -> {
-                        unv.findElements(By.tagName("div")).forEach(un ->{
-                            univs.add(un.findElements(By.tagName("div")).get(1).getText());
-                            System.out.println(un.findElements(By.tagName("div")).get(1).getText());
-                        });
+                    authors.forEach(unv -> {
+                        univs.add(unv.findElement(By.className("author-card")).findElement(By.className("row")).findElements(By.tagName("div")).get(0).findElements(By.tagName("div")).get(1).findElement(By.tagName("div")).getText());
+
+                    });
+
+                    String newURL=driver.getCurrentUrl().replace("authors#authors","keywords#keywords");
+                    driver.get(newURL);
+                    List<WebElement> elms = driver.findElements(By.className("doc-keywords-list-item")).get(0).findElements(By.className("stats-keywords-list-item"));
+
+                    elms.forEach(elm -> {
+
+                        keywords.add(elm.getAttribute("data-tealium_data").split("\"keyword:\"")[0].replace("}","").replace("\"","").split(",")[1].split(":")[1]);
 
                     });
 
                     dts.setAuthors(auths);
                     dts.setUniverseties(univs);
-
-
-                    dts.setDate(dates.get(1).getText());
+                    dts.setKeywords(keywords);
                     dts.setJournal("IEEE");
                     dets.add(dts);
+                    repo.save(dts);
                 }
         );
 

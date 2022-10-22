@@ -2,12 +2,19 @@ package com.example.datascraping.dto;
 
 import java.util.List;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.Data;
 
 @Data
+@Document(collection="data")
 public class DetailsSD {
+
+	@Id
+	private String id;
 	String title;
-	List<String> Keywords;
+	List<String> keywords;
 	List<String> authors;
 	List<String> universeties;
 	String date;
@@ -20,10 +27,10 @@ public class DetailsSD {
 		this.title = title;
 	}
 	public List<String> getKeywords() {
-		return Keywords;
+		return keywords;
 	}
 	public void setKeywords(List<String> keywords) {
-		Keywords = keywords;
+		this.keywords = keywords;
 	}
 	public List<String> getAuthors() {
 		return authors;
@@ -49,9 +56,5 @@ public class DetailsSD {
 	public void setJournal(String journal) {
 		this.journal = journal;
 	}
-
-
-
-
 
 }
