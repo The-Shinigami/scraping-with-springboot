@@ -20,6 +20,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 //import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -40,19 +41,26 @@ public class ScrapeServiceImpl implements ScrapeService{
         ChromeOptions options = new ChromeOptions();
 //       options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors");
         WebDriver driver = new ChromeDriver(options);
-        loadPage(driver,"https://www.sciencedirect.com/search?qs=Blockchain","SD");
-
-        List<WebElement> elements = driver.findElements(By.className("result-list-title-link"));
         List<ResponseSD> links = new ArrayList<ResponseSD>();
-        elements.forEach(element -> {
-                    ResponseSD res = new ResponseSD();
+        List<String> urls= new ArrayList<String>();
+        List<String> offsets=Arrays.asList("0","25","50","75","100");
+        for(int i=0;i<offsets.size();i++) {
+            urls.add("https://www.sciencedirect.com/search?qs=Blockchain&offset="+offsets.get(i));
+        }
+        for(int j=0;j<urls.size();j++) {
+            loadPage(driver,urls.get(j),"SD");
 
-                    res.setTitle(element.getText());
-                    res.setUrl(element.getAttribute("href"));
-                    links.add(res);
-                }
-        );
+            List<WebElement> elements = driver.findElements(By.className("result-list-title-link"));
 
+            elements.forEach(element -> {
+                        ResponseSD res = new ResponseSD();
+
+                        res.setTitle(element.getText());
+                        res.setUrl(element.getAttribute("href"));
+                        links.add(res);
+                    }
+            );
+        }
         driver.close();
         return links;
     }
@@ -188,19 +196,26 @@ public class ScrapeServiceImpl implements ScrapeService{
         ChromeOptions options = new ChromeOptions();
 //       options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors");
         WebDriver driver = new ChromeDriver(options);
-        loadPage(driver,"https://dl.acm.org/action/doSearch?AllField=Blockchain","ACM");
-
-        List<WebElement> elements = driver.findElements(By.className("hlFld-Title"));
         List<ResponseSD> links = new ArrayList<ResponseSD>();
-        elements.forEach(element -> {
-                    ResponseSD res = new ResponseSD();
+        List<String> urls= new ArrayList<String>();
+        List<String> offsets=Arrays.asList("0","1","2","3","4");
+        for(int i=0;i<offsets.size();i++) {
+            urls.add("https://dl.acm.org/action/doSearch?AllField=Blockchain&startPage="+offsets.get(i)+"&pageSize=20");
+        }
+        for(int j=0;j<urls.size();j++) {
+            loadPage(driver,urls.get(j),"ACM");
 
-                    res.setTitle(element.getText());
-                    res.setUrl(element.findElement(By.tagName("a")).getAttribute("href"));
-                    links.add(res);
-                }
-        );
+            List<WebElement> elements = driver.findElements(By.className("hlFld-Title"));
 
+            elements.forEach(element -> {
+                        ResponseSD res = new ResponseSD();
+
+                        res.setTitle(element.getText());
+                        res.setUrl(element.findElement(By.tagName("a")).getAttribute("href"));
+                        links.add(res);
+                    }
+            );
+        }
         driver.close();
         return links;
     }
@@ -283,22 +298,29 @@ public class ScrapeServiceImpl implements ScrapeService{
         ChromeOptions options = new ChromeOptions();
 //       options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors");
         WebDriver driver = new ChromeDriver(options);
-        loadPage(driver,"https://ieeexplore.ieee.org/search/searchresult.jsp?newsearch=true&queryText=blockchain","IEEE");
-
-        List<WebElement> elements = driver.findElements(By.className("List-results-items"));
         List<ResponseSD> links = new ArrayList<ResponseSD>();
-        elements.forEach(element -> {
-                    ResponseSD res = new ResponseSD();
-                    String cond=element.findElement(By.className("publisher-info-container")).findElements(By.tagName("span")).get(1).findElements(By.tagName("span")).get(1).getText();
+        List<String> urls= new ArrayList<String>();
+        List<String> offsets=Arrays.asList("1","2","3","4","5");
+        for(int i=0;i<offsets.size();i++) {
+            urls.add("https://ieeexplore.ieee.org/search/searchresult.jsp?newsearch=true&queryText=blockchain&highlight=true&returnType=SEARCH&matchPubs=true&pageNumber="+offsets.get(i)+"&returnFacets=ALL");
+        }
+        for(int j=0;j<urls.size();j++) {
+            loadPage(driver,urls.get(j),"IEEE");
 
-                    if(cond.equals("Conference Paper")) {
-                        res.setTitle(element.findElement(By.tagName("a")).getText());
-                        res.setUrl(element.findElement(By.className("result-item-title")).findElement(By.tagName("a")).getAttribute("href"));
-                        links.add(res);
+            List<WebElement> elements = driver.findElements(By.className("List-results-items"));
+
+            elements.forEach(element -> {
+                        ResponseSD res = new ResponseSD();
+                        String cond=element.findElement(By.className("publisher-info-container")).findElements(By.tagName("span")).get(1).findElements(By.tagName("span")).get(1).getText();
+
+                        if(cond.equals("Conference Paper")) {
+                            res.setTitle(element.findElement(By.tagName("a")).getText());
+                            res.setUrl(element.findElement(By.className("result-item-title")).findElement(By.tagName("a")).getAttribute("href"));
+                            links.add(res);
+                        }
                     }
-                }
-        );
-
+            );
+        }
         driver.close();
         return links;
     }
