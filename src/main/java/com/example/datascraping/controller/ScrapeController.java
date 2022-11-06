@@ -4,6 +4,7 @@ import com.example.datascraping.dto.DetailsSD;
 import com.example.datascraping.dto.ResponseSD;
 import com.example.datascraping.service.ScrapeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +23,7 @@ public class ScrapeController {
     }
 
     @GetMapping("/details")
+    @Scheduled(cron = "0 0 12 * * 0")
     public List<DetailsSD> getDetails(){
         return scrapeService.extreactDetailsFromSD();
     }
@@ -32,6 +34,7 @@ public class ScrapeController {
     }
 
     @GetMapping("/detailsAcm")
+    @Scheduled(cron = "0 0 14 * * 0")
     public List<DetailsSD> getDetailsAcm(){
         return scrapeService.extreactDetailsFromACM();
     }
@@ -42,6 +45,7 @@ public class ScrapeController {
     }
 
     @GetMapping("/detailsIeee")
+    @Scheduled(cron = "0 0 16 * * 0")
     public List<DetailsSD> getDetailsIeee(){
         return scrapeService.extreactDetailsFromIeee();
     }

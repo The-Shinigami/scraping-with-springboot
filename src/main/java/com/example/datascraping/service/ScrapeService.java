@@ -14,4 +14,5 @@ public interface ScrapeService {
    List<DetailsSD> extreactDetailsFromACM();
    List<ResponseSD> extreactDataFromIeee();
    List<DetailsSD> extreactDetailsFromIeee();
+   boolean exists(String title);
 }

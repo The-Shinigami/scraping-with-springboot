@@ -19,6 +19,8 @@ public class DetailsSD {
 	List<String> universeties;
 	String date;
 	String journal;
+	String doi;
+	String abstractText;
 
 	public String getTitle() {
 		return title;
@@ -56,5 +58,18 @@ public class DetailsSD {
 	public void setJournal(String journal) {
 		this.journal = journal;
 	}
+	public String getDoi() {
+		return doi;
+	}
+	public void setDoi(String doi) {
+		this.doi = doi;
+	}
+	public String getAbstractText() {
+		return abstractText;
+	}
+	public void setAbstractText(String abstractText) {
+		this.abstractText = abstractText;
+	}
+
 
 }
