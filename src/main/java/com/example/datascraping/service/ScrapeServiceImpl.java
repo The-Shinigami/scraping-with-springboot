@@ -38,7 +38,7 @@ public class ScrapeServiceImpl implements ScrapeService{
         List<String> urls= new ArrayList<String>();
         List<String> offsets=Arrays.asList("0","25","50","75","100","125");
         for(int i=0;i<offsets.size();i++) {
-            urls.add("https://www.sciencedirect.com/search?qs=Blockchain&offset="+offsets.get(i));
+            urls.add("https://www.sciencedirect.com/search?qs=blockchain&articleTypes=FLA&lastSelectedFacet=articleTypes&offset="+offsets.get(i));
         }
         for(int j=0;j<urls.size();j++) {
             loadPage(driver,urls.get(j),"SD");
@@ -129,6 +129,7 @@ public class ScrapeServiceImpl implements ScrapeService{
                         loadPages(driver,link.getUrl(),"SD");
                         urls.add(link.getUrl());
 
+                        WebElement issn =driver.findElement(By.className("publication-title-link"));
                         WebElement elt =driver.findElement(By.className("title-text"));
 
                         WebElement doi=driver.findElement(By.id("article-identifier-links")).findElement(By.className("doi"));
@@ -188,6 +189,7 @@ public class ScrapeServiceImpl implements ScrapeService{
                         String[] tokens =datePub.split(" ");
                         dateTrue=tokens[tokens.length - 3]+" "+tokens[tokens.length - 2]+" "+tokens[tokens.length - 1];
 
+                        dts.setIssn(issn.getText());
                         dts.setDate(dateTrue);
                         dts.setJournal("SD");
                         dts.setDoi(doi.getText());
@@ -293,11 +295,14 @@ public class ScrapeServiceImpl implements ScrapeService{
                             WebElement button2=driver.findElement(By.id("pill-information__contentcon"));
                             button2.sendKeys(Keys.ENTER);
                             Thread.sleep(10000);
+                            WebElement issn= driver.findElement(By.className("cover-image__details-extra")).findElements(By.className("flex-container")).get(0).findElement(By.className("space"));
                             List<String> keywords=new ArrayList<String>();
                             List<WebElement> elms = driver.findElements(By.className("badge-type"));
                             elms.forEach(elm -> {
                                 keywords.add(elm.getText());
                             });
+
+                            dts.setIssn(issn.getText());
                             dts.setKeywords(keywords);
 
 
