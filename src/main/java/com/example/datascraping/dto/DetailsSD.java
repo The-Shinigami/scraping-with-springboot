@@ -22,9 +22,7 @@ public class DetailsSD {
 	String doi;
 	String abstractText;
 	String issn;
-
 	String hIndex;
-
 	List<Quartile> quartiles;
 
 
