@@ -21,6 +21,7 @@ public class DetailsSD {
 	String journal;
 	String doi;
 	String abstractText;
+	String issn;
 
 	public String getTitle() {
 		return title;
