@@ -494,7 +494,7 @@ public class ScrapeServiceImpl implements ScrapeService{
         for(int i = 0 ; i<listDetailsTmp.size();i++) {
 
             loadPage(driver, "https://www.scimagojr.com/journalsearch.php?q=" + listDetailsTmp.get(i).getIssn().replace(" ", "+"), "SJR");
-            if (driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).get(0).isDisplayed()) {
+            if (driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).size()>0 && driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).get(0).isDisplayed()) {
                 WebElement result = driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).get(0);
                 result.click();
 
@@ -503,14 +503,15 @@ public class ScrapeServiceImpl implements ScrapeService{
 
 
                 try {
-                    List<WebElement> quartiles = driver.findElements(By.className("cellslide")).get(1).findElements(By.className("tr"));
+                    List<WebElement> quartiles = driver.findElements(By.className("cellslide")).get(1).findElements(By.tagName("tr"));
                     List<Quartile> quartileList = new ArrayList<>();
 
-                    for (int j = 0; j < quartiles.size(); j++) {
+                    for (int j = 1; j < quartiles.size(); j++) {
                         Quartile q = new Quartile();
-                        String category = quartiles.get(j).findElements(By.className("td")).get(0).getText();
-                        String year = quartiles.get(j).findElements(By.className("td")).get(1).getText();
-                        String quartile = quartiles.get(j).findElements(By.className("td")).get(2).getText();
+                        List<WebElement> columns = quartiles.get(j).findElements(By.tagName("td"));
+                        String category = columns.get(0).getText();
+                        String year = columns.get(1).getText();
+                        String quartile = columns.get(2).getText();
 
                         q.setCategory(category);
                         q.setYear(year);
