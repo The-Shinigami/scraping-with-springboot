@@ -340,7 +340,7 @@ public class ScrapeServiceImpl implements ScrapeService{
         WebDriver driver = new ChromeDriver(options);
         List<ResponseSD> links = new ArrayList<ResponseSD>();
         List<String> urls= new ArrayList<String>();
-        List<String> offsets=Arrays.asList("1","2","3","4","5","6","7");
+        List<String> offsets=Arrays.asList("1");
         for(int i=0;i<offsets.size();i++) {
             urls.add("https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=Blockchain&highlight=true&returnType=SEARCH&matchPubs=true&refinements=ContentType:Journals&returnFacets=ALL&pageNumber="+offsets.get(i));
         }
@@ -386,7 +386,7 @@ public class ScrapeServiceImpl implements ScrapeService{
                         urls.add(link.getUrl());
                         DetailsSD dts = new DetailsSD();
                         List<WebElement> dates =driver.findElements(By.className("u-pb-1"));
-                        dts.setDate(dates.get(3).getText().split(":")[1]);
+                        dts.setDate(dates.get(3).getText().split(":")[1].trim());
 
                         WebElement elt =driver.findElement(By.className("document-title"));
 
@@ -410,7 +410,7 @@ public class ScrapeServiceImpl implements ScrapeService{
                                 List<WebElement> issn=driver.findElement(By.className("abstract-metadata-indent")).findElements(By.tagName("div"));
                                 for(int i=0;i<issn.size();i++){
                                     if(issn.get(i).getText().split(":")[0].contains("Electronic ISSN")){
-                                        dts.setIssn(issn.get(i).getText().split(":")[1]);
+                                        dts.setIssn(issn.get(i).getText().split(":")[1].trim());
                                         break;
                                     }
                                 }
