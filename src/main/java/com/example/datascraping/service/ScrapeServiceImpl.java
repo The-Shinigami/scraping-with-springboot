@@ -1,16 +1,11 @@
 package com.example.datascraping.service;
 
-
-
 import com.example.datascraping.dto.DetailsSD;
 import com.example.datascraping.dto.Quartile;
 import com.example.datascraping.dto.ResponseSD;
 import com.example.datascraping.repository.ScrapeRepository;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +32,7 @@ public class ScrapeServiceImpl implements ScrapeService{
         WebDriver driver = new ChromeDriver(options);
         List<ResponseSD> links = new ArrayList<ResponseSD>();
         List<String> urls= new ArrayList<String>();
-        List<String> offsets=Arrays.asList("0","25","50","75","100","125");
+        List<String> offsets=Arrays.asList("0","25","50","75","100","125","150");
         for(int i=0;i<offsets.size();i++) {
             urls.add("https://www.sciencedirect.com/search?qs=blockchain&articleTypes=FLA&lastSelectedFacet=articleTypes&offset="+offsets.get(i));
         }
@@ -148,9 +143,11 @@ public class ScrapeServiceImpl implements ScrapeService{
 
                         List<WebElement> elms = driver.findElements(By.className("keyword"));
                         List<WebElement> authors = driver.findElements(By.className("content"));
+                        List<WebElement> tests= driver.findElements(By.className("content"));
                         List<String> auths=new ArrayList<String>();
                         authors.forEach(author -> {
-                            if(authors.size()==8) {
+                            System.out.println("siiiiiizeeee"+author.findElements(By.tagName("span")).size());
+                            if(author.findElements(By.tagName("span")).size()==2) {
                                 auths.add(author.findElement(By.className("surname")).getText());
                             }else{
                                 auths.add(author.findElement(By.className("given-name")).getText() + " " + author.findElement(By.className("surname")).getText());
@@ -158,6 +155,11 @@ public class ScrapeServiceImpl implements ScrapeService{
                         });
                         WebElement button=driver.findElement(By.id("show-more-btn"));
                         button.click();
+
+//                        WebElement element =driver.findElement(By.id("show-more-btn"));
+//                        JavascriptExecutor executor = (JavascriptExecutor)driver;
+//                        executor.executeScript("arguments[0].click();", element);
+
                         List<WebElement> universeties = driver.findElements(By.className("affiliation"));
                         WebElement date =driver.findElement(By.tagName("p"));
 
@@ -219,9 +221,9 @@ public class ScrapeServiceImpl implements ScrapeService{
         WebDriver driver = new ChromeDriver(options);
         List<ResponseSD> links = new ArrayList<ResponseSD>();
         List<String> urls= new ArrayList<String>();
-        List<String> offsets=Arrays.asList("0","1","2","3","4","5");
+        List<String> offsets=Arrays.asList("0","1","2","3","4","5","6");
         for(int i=0;i<offsets.size();i++) {
-            urls.add("https://dl.acm.org/action/doSearch?AllField=Blockchain&startPage="+offsets.get(i)+"&pageSize=20");
+            urls.add("https://dl.acm.org/action/doSearch?AllField=Blockchain&startPage="+offsets.get(i)+"&pageSize=50");
         }
         for(int j=0;j<urls.size();j++) {
             loadPage(driver,urls.get(j),"ACM");
@@ -233,9 +235,11 @@ public class ScrapeServiceImpl implements ScrapeService{
                         if(this.exists(element.getText())) {
                             System.out.println("Already exists in DB");
                         }else {
-                            res.setTitle(element.getText());
-                            res.setUrl(element.findElement(By.tagName("a")).getAttribute("href"));
-                            links.add(res);
+                            if(driver.findElement(By.className("issue-heading")).getText().contains("RESEARCH-ARTICLE")) {
+                                res.setTitle(element.getText());
+                                res.setUrl(element.findElement(By.tagName("a")).getAttribute("href"));
+                                links.add(res);
+                            }
                         }
                     }
             );
@@ -341,7 +345,7 @@ public class ScrapeServiceImpl implements ScrapeService{
         WebDriver driver = new ChromeDriver(options);
         List<ResponseSD> links = new ArrayList<ResponseSD>();
         List<String> urls= new ArrayList<String>();
-        List<String> offsets=Arrays.asList("1","2","3","4","5","6");
+        List<String> offsets=Arrays.asList("1","2","3","4","5","6","7");
         for(int i=0;i<offsets.size();i++) {
             urls.add("https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=Blockchain&highlight=true&returnType=SEARCH&matchPubs=true&refinements=ContentType:Journals&returnFacets=ALL&pageNumber="+offsets.get(i));
         }
@@ -353,7 +357,7 @@ public class ScrapeServiceImpl implements ScrapeService{
             elements.forEach(element -> {
                         ResponseSD res = new ResponseSD();
 
-                        if(this.exists(element.getText())) {
+                        if(this.exists(element.findElement(By.tagName("a")).getText())) {
                             System.out.println("Already exists in DB");
                         }else {
                             res.setTitle(element.findElement(By.tagName("a")).getText());
@@ -399,6 +403,34 @@ public class ScrapeServiceImpl implements ScrapeService{
 
                         WebElement doi=driver.findElement(By.className("stats-document-abstract-doi")).findElement(By.tagName("a"));
                         dts.setDoi(doi.getText());
+
+                        try {
+                            int condition=driver.findElements(By.className("col-6")).get(0).findElements(By.className("u-pb-1")).get(2).findElements(By.tagName("div")).size();
+
+                            if(condition ==1) {
+                                WebElement element =  driver.findElements(By.className("col-6")).get(0).findElements(By.className("u-pb-1")).get(2).findElement(By.tagName("div"));
+                                JavascriptExecutor executor = (JavascriptExecutor)driver;
+                                executor.executeScript("arguments[0].click();", element);
+
+                                List<WebElement> issn=driver.findElement(By.className("abstract-metadata-indent")).findElements(By.tagName("div"));
+                                for(int i=0;i<issn.size();i++){
+                                    if(issn.get(i).getText().split(":")[0].contains("Electronic ISSN")){
+                                        dts.setIssn(issn.get(i).getText().split(":")[1]);
+                                        break;
+                                    }
+                                }
+
+                            }else {
+                                WebElement issn = driver.findElements(By.className("col-6")).get(0).findElements(By.className("u-pb-1")).get(2).findElement(By.tagName("div")).findElement(By.tagName("div"));
+                                dts.setIssn(issn.getText().split(":")[1]);
+                            }
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            // TODO Auto-generated catch block
+
+                        }
+
+
                         try {
                             driver.findElement(By.id("authors")).sendKeys(Keys.ENTER);
                             Thread.sleep(10000);
