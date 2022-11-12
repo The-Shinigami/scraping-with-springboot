@@ -49,4 +49,11 @@ public class ScrapeController {
     public List<DetailsSD> getDetailsIeee(){
         return scrapeService.extreactDetailsFromIeee();
     }
+
+    @GetMapping("/detailsSJR")
+    public List<DetailsSD> getDetailsSJR(){
+        return scrapeService.extractDetailsFromSJR();
+    }
+
 }
+
