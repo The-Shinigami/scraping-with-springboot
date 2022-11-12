@@ -1,6 +1,7 @@
 package com.example.datascraping.service;
 
 import com.example.datascraping.dto.DetailsSD;
+import com.example.datascraping.dto.Quartile;
 import com.example.datascraping.dto.ResponseSD;
 import com.example.datascraping.repository.ScrapeRepository;
 
@@ -98,8 +99,12 @@ public class ScrapeServiceImpl implements ScrapeService{
             while (!driver.findElement(By.className("hlFld-Title")).isDisplayed()){
                 System.out.println("loading...");
             }
-        }else {
+        }else if(journal=="IEEE"){
             while (!driver.findElement(By.className("main-section")).isDisplayed()){
+                System.out.println("loading...");
+            }
+        }else if(journal=="SJR"){
+            while (!driver.findElement(By.className("journaldescription")).isDisplayed()){
                 System.out.println("loading...");
             }
         }
@@ -474,6 +479,56 @@ public class ScrapeServiceImpl implements ScrapeService{
             driver.close();
             return dets;
         }
+    }
+
+    @Override
+    public List<DetailsSD> extractDetailsFromSJR(){
+        System.setProperty("webdriver.chrome.driver", env.getProperty("webdriver"));
+        ChromeOptions options = new ChromeOptions();
+//       options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors");
+        WebDriver driver = new ChromeDriver(options);
+
+
+        List<DetailsSD> listDetailsTmp = repo.findAll();
+        List<DetailsSD> listDetails;
+        for(int i = 0 ; i<listDetailsTmp.size();i++) {
+
+            loadPage(driver, "https://www.scimagojr.com/journalsearch.php?q=" + listDetailsTmp.get(i).getIssn().replace(" ", "+"), "SJR");
+            if (driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).get(0).isDisplayed()) {
+                WebElement result = driver.findElements(By.className("search_results")).get(0).findElements(By.tagName("a")).get(0);
+                result.click();
+
+                String hIndex = driver.findElements(By.className("hindexnumber")).get(0).getText();
+                listDetailsTmp.get(i).setHIndex(hIndex);
+
+
+                try {
+                    List<WebElement> quartiles = driver.findElements(By.className("cellslide")).get(1).findElements(By.className("tr"));
+                    List<Quartile> quartileList = new ArrayList<>();
+
+                    for (int j = 0; j < quartiles.size(); j++) {
+                        Quartile q = new Quartile();
+                        String category = quartiles.get(j).findElements(By.className("td")).get(0).getText();
+                        String year = quartiles.get(j).findElements(By.className("td")).get(1).getText();
+                        String quartile = quartiles.get(j).findElements(By.className("td")).get(2).getText();
+
+                        q.setCategory(category);
+                        q.setYear(year);
+                        q.setQuartile(quartile);
+
+                        quartileList.add(q);
+
+                    }
+                    listDetailsTmp.get(i).setQuartiles(quartileList);
+                } catch (Exception e) {
+                    System.out.println("quartiles does not exist");
+                }
+                repo.save(listDetailsTmp.get(i));
+            }
+        }
+        listDetails =  repo.findAll();
+
+        return listDetails;
     }
 
     @Override
